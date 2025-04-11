@@ -1,0 +1,246 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <dirent.h>
+#include <time.h>
+
+#define RESET "\033[0m"
+#define BLUE "\033[34m"
+#define GREEN "\033[32m"
+#define RED "\033[31m"
+#define YELLOW "\033[33m"
+
+// Option 1: Type and run code
+void runTypedCode() {
+    int langChoice;
+    char code[1000];
+    FILE *fptr;
+
+    printf(YELLOW "\nChoose Language:\n" RESET);
+    printf("1. C\n2. Python\n");
+    printf("Enter your choice: ");
+    scanf("%d", &langChoice);
+    getchar();
+
+    printf(GREEN "\nType your code below. End with a single line containing only `EOF`.\n\n" RESET);
+
+    char line[200];
+    code[0] = '\0';
+
+    while (1) {
+        printf("01>>");
+        fgets(line, sizeof(line), stdin);
+        if (strcmp(line, "EOF\n") == 0 || strcmp(line, "EOF\r\n") == 0) break;
+        strcat(code, line);
+    }
+
+    if (langChoice == 1) {
+        fptr = fopen("temp.c", "w");
+        fprintf(fptr, "%s", code);
+        fclose(fptr);
+        printf(BLUE "\n------------------------\n\n" RESET);
+        system("gcc temp.c -o temp.out && ./temp.out");
+        printf(BLUE "\n------------------------\n" RESET);
+    } else if (langChoice == 2) {
+        fptr = fopen("temp.py", "w");
+        fprintf(fptr, "%s", code);
+        fclose(fptr);
+        printf(BLUE "\n------------------------\n\n" RESET);
+        system("python3 temp.py");
+        printf(BLUE "\n------------------------\n" RESET);
+    } else {
+        printf(RED "❌ Invalid language choice!\n" RESET);
+    }
+}
+
+// Option 2: File operations
+void fileOperations() {
+    int choice;
+    char filename[100], content[500], ch;
+    FILE *fptr;
+
+    while (1) {
+        printf(YELLOW "\n\U0001F4C2 File Operations:\n" RESET);
+        printf("1. Create File\n2. Read File\n3. Delete File\n4. List Files\n5. Back to Main Menu\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+        getchar();
+
+        switch (choice) {
+            case 1:
+                printf("Enter file name: ");
+                scanf("%s", filename);
+                getchar();
+                printf("Enter content (end with `EOF` line):\n");
+                content[0] = '\0';
+                char line[200];
+                while (1) {
+                    printf("\u27A4 ");
+                    fgets(line, sizeof(line), stdin);
+                    if (strcmp(line, "EOF\n") == 0 || strcmp(line, "EOF\r\n") == 0) break;
+                    strcat(content, line);
+                }
+                fptr = fopen(filename, "w");
+                fprintf(fptr, "%s", content);
+                fclose(fptr);
+                printf(GREEN "✅ File Created Successfully!\n" RESET);
+                break;
+
+            case 2:
+                printf("Enter file name: ");
+                scanf("%s", filename);
+                getchar();
+                fptr = fopen(filename, "r");
+                if (fptr == NULL) {
+                    printf(RED "❌ File Not Found!\n" RESET);
+                } else {
+                    while ((ch = fgetc(fptr)) != EOF) putchar(ch);
+                    fclose(fptr);
+                }
+                break;
+
+            case 3:
+                printf("Enter file name: ");
+                scanf("%s", filename);
+                if (remove(filename) == 0)
+                    printf(GREEN "✅ File Deleted!\n" RESET);
+                else
+                    printf(RED "❌ File Not Found!\n" RESET);
+                break;
+
+            case 4: {
+                printf(GREEN "\U0001F4C2 Files in Current Directory:\n" RESET);
+                struct dirent *de;
+                DIR *dr = opendir(".");
+                if (dr == NULL) {
+                    printf(RED "❌ Could Not Open Directory\n" RESET);
+                } else {
+                    while ((de = readdir(dr)) != NULL)
+                        printf("%s\n", de->d_name);
+                    closedir(dr);
+                }
+                break;
+            }
+
+            case 5:
+                return;
+
+            default:
+                printf(RED "❌ Invalid choice!\n" RESET);
+        }
+    }
+}
+
+// Option 3: Simple ChatBot
+void chatbot() {
+    char input[100];
+    printf(GREEN "\n\U0001F4AC ChatBot Activated! Type something (type 'bye' to exit).\n" RESET);
+
+    while (1) {
+        printf(YELLOW "You: " RESET);
+        fgets(input, sizeof(input), stdin);
+        input[strcspn(input, "\n")] = '\0';
+
+        if (strcasecmp(input, "bye") == 0 || strcasecmp(input, "exit") == 0) {
+            printf(BLUE "Bot: Goodbye! \U0001F44B\n" RESET);
+            break;
+        } else if (strcasecmp(input, "hello") == 0 || strcasecmp(input, "hi") == 0) {
+            printf(BLUE "Bot: Hey there! \U0001F44B\n" RESET);
+        } else if (strcasecmp(input, "how are you") == 0) {
+            printf(BLUE "Bot: I'm just a bunch of code, but I'm doing great!\n" RESET);
+        } else if (strcasecmp(input, "who are you") == 0) {
+            printf(BLUE "Bot: I'm your friendly terminal chatbot \U0001F916\n" RESET);
+        } else {
+            printf(BLUE "Bot: Hmm, I don't understand that yet.\n" RESET);
+        }
+    }
+}
+
+// Option 4: Run existing code file
+void runCodeFile() {
+    char filename[100];
+    printf("\nEnter the filename to run (e.g., mycode.c or script.py): ");
+    scanf("%s", filename);
+
+    if (access(filename, F_OK) != 0) {
+        printf(RED "❌ File not found!\n" RESET);
+        return;
+    }
+
+    if (strstr(filename, ".c")) {
+        char command[200];
+        snprintf(command, sizeof(command), "gcc %s -o temp_exec && ./temp_exec", filename);
+        printf(BLUE "\n------------------------\n" RESET);
+        system(command);
+        printf(BLUE "\n------------------------\n" RESET);
+    } else if (strstr(filename, ".py")) {
+        char command[200];
+        snprintf(command, sizeof(command), "python3 %s", filename);
+        printf(BLUE "\n------------------------\n\n" RESET);
+        system(command);
+        printf(BLUE "\n------------------------\n" RESET);
+    } else {
+        printf(RED "❌ Unsupported file type! Only .c and .py files are supported.\n" RESET);
+    }
+}
+
+// Option 5: Custom MyLang Command Shell
+void mylang() {
+    char input[100];
+    printf(GREEN "\n\U0001F9D1‍💻 Welcome to MyLang - Your Custom Command Shell!\n" RESET);
+    printf("Type 'exit' to return to the main menu.\n");
+
+    while (1) {
+        printf("MyLang>> ");
+        fgets(input, sizeof(input), stdin);
+        input[strcspn(input, "\n")] = 0;
+
+        if (strcasecmp(input, "exit") == 0) {
+            break;
+        } else if (strncmp(input, "print ", 6) == 0) {
+            printf(BLUE "%s\n" RESET, input + 6);
+        } else if (strcasecmp(input, "time") == 0) {
+            time_t t;
+            time(&t);
+            printf(BLUE "Current Time: %s" RESET, ctime(&t));
+        } else {
+            printf(RED "❌ Unknown MyLang command!\n" RESET);
+        }
+    }
+}
+
+// Main Menu
+void menu() {
+    int choice;
+
+    while (1) {
+        printf(YELLOW "\n\U0001F680 Welcome to the ZeroOne Shell!\n" RESET);
+        printf("----------------------------------\n");
+        printf("1️⃣ Type and Run Code\n");
+        printf("2️⃣ File Operations\n");
+        printf("3️⃣ ChatBot\n");
+        printf("4️⃣ Run Existing Code File\n");
+        printf("5️⃣ MyLang (Custom Command Language)\n");
+        printf("6️⃣ Exit\n");
+        printf("----------------------------------\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+        getchar();
+
+        switch (choice) {
+            case 1: runTypedCode(); break;
+            case 2: fileOperations(); break;
+            case 3: chatbot(); break;
+            case 4: runCodeFile(); break;
+            case 5: mylang(); break;
+            case 6: printf(YELLOW "Goodbye! \U0001F44B\n" RESET); return;
+            default: printf(RED "❌ Invalid choice!\n" RESET);
+        }
+    }
+}
+
+int main() {
+    menu();
+    return 0;
+}
